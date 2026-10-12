@@ -1,0 +1,56 @@
+# =======================================================
+# Sip N Bite - Root .gitignore
+# =======================================================
+
+# Dependencies
+node_modules/
+vendor/
+*/node_modules/
+*/vendor/
+React_Native/SipNBite/node_modules/
+WEB/node_modules/
+WEB/vendor/
+
+# Environment files & Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+$env
+PROJECT_API_KEYS_AND_SENSITIVE_DATA.md
+*CREDENTIALS*.md
+*SENSITIVE*.md
+PRIVATE_*.md
+
+# Logs & Framework caches
+*.log
+.expo/
+*/.expo/
+dist/
+web-build/
+WEB/storage/logs/*.log
+WEB/storage/framework/cache/*
+WEB/storage/framework/sessions/*
+WEB/storage/framework/views/*
+WEB/bootstrap/cache/*.php
+
+# Git backups of nested repos
+*.git_backup/
+.git_backup/
+
+# Archives & Large files
+*.rar
+*.zip
+*.tar.gz
+*.apk
+*.aab
+demo_android_application/
+final_major_project/
+WEB.rar
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
