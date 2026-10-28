@@ -67,18 +67,21 @@
 
                 <!-- Add New Address Form -->
                 <h6 class="fw-bold mb-2 border-top pt-3">Add New Address</h6>
-                <form action="{{ route('customer.profile.address') }}" method="POST">
+                <form action="{{ route('customer.profile.address') }}" method="POST" novalidate>
                     @csrf
                     <div class="row g-2 mb-2">
                         <div class="col-md-6">
-                            <input type="text" name="title" class="form-control form-control-sm bg-light" placeholder="Title (e.g. Home, Work)" required>
+                            <label class="form-label small fw-semibold">Address Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control form-control-sm bg-light" required>
                         </div>
                         <div class="col-md-6">
-                            <input type="text" name="pincode" class="form-control form-control-sm bg-light" placeholder="Pincode (e.g. 110016)">
+                            <label class="form-label small fw-semibold">Pincode</label>
+                            <input type="text" name="pincode" class="form-control form-control-sm bg-light">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <textarea name="address_line" class="form-control form-control-sm bg-light" rows="2" placeholder="Full address line" required></textarea>
+                        <label class="form-label small fw-semibold">Full Address <span class="text-danger">*</span></label>
+                        <textarea name="address_line" class="form-control form-control-sm bg-light" rows="2" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">+ Add Address</button>
                 </form>

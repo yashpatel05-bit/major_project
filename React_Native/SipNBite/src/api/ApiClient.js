@@ -51,6 +51,9 @@ export const getUserOrders = (userId) =>
 export const getOrderDetails = (orderId) =>
   api.get(`orders/${orderId}`);
 
+export const cancelOrder = (orderId, data) =>
+  api.post(`orders/${orderId}/cancel`, data);
+
 // ─── Table Booking APIs ─────────────────────────────────────
 export const getTables = () => api.get('tables');
 

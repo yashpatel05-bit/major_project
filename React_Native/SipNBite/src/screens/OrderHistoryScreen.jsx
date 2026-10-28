@@ -7,11 +7,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { getUserOrders } from '../api/ApiClient';
 import OrderCard from '../components/OrderCard';
+import { colors } from '../theme/colors';
 
 export default function OrderHistoryScreen({ navigation }) {
   const { user } = useAuth();
@@ -52,7 +55,7 @@ export default function OrderHistoryScreen({ navigation }) {
     }
     if (activeFilter === 'Delivered') return status === 'delivered';
     if (activeFilter === 'Cancelled') return status === 'cancelled';
-    return true; // 'All'
+    return true;
   });
 
   return (
@@ -60,11 +63,11 @@ export default function OrderHistoryScreen({ navigation }) {
       {/* Header */}
       <View style={styles.headerBar}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color="#1F1610" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </Pressable>
         <Text style={styles.headerTitle}>My Orders</Text>
         <Pressable onPress={() => fetchOrders(true)} style={{ padding: 4 }}>
-          <Ionicons name="refresh" size={20} color="#E23744" />
+          <Ionicons name="refresh" size={20} color={colors.primary} />
         </Pressable>
       </View>
 
@@ -85,12 +88,12 @@ export default function OrderHistoryScreen({ navigation }) {
 
       {loading && !refreshing ? (
         <View style={styles.loadingState}>
-          <ActivityIndicator size="large" color="#B86B3D" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Fetching order history...</Text>
         </View>
       ) : filteredOrders.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="receipt-outline" size={48} color="#E23744" style={{ marginBottom: 10 }} />
+          <Ionicons name="receipt-outline" size={50} color={colors.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>No {activeFilter !== 'All' ? activeFilter : ''} Orders Found</Text>
           <Text style={styles.emptySubtitle}>Your order history will show here with real status tracking.</Text>
         </View>
@@ -104,8 +107,8 @@ export default function OrderHistoryScreen({ navigation }) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#B86B3D']}
-              tintColor="#B86B3D"
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
           renderItem={({ item }) => (
@@ -123,46 +126,49 @@ export default function OrderHistoryScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF8F4' },
+  container: { flex: 1, backgroundColor: colors.background },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: Platform.OS === 'android' ? ((StatusBar.currentHeight || 28) + 8) : 12,
     paddingBottom: 14,
-    backgroundColor: '#FFFDFB',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#EFE8E0',
+    borderBottomColor: colors.border,
   },
-  backButton: { width: 32, height: 32, justifyContent: 'center' },
-  backText: { fontSize: 28, color: '#3D2D25', lineHeight: 30 },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#3D2D25' },
+  backButton: { width: 36, height: 36, justifyContent: 'center' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.primaryDark,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
   filterRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,
-    backgroundColor: '#FFFDFB',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#EFE8E0',
+    borderBottomColor: colors.border,
   },
   filterChip: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#F8F4EE',
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#EFE8E0',
+    borderColor: colors.border,
   },
-  filterChipActive: { backgroundColor: '#B86B3D', borderColor: '#B86B3D' },
-  filterChipText: { fontSize: 12, fontWeight: '700', color: '#8C827A' },
-  filterChipTextActive: { color: '#FFF8F0' },
+  filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterChipText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  filterChipTextActive: { color: '#FFFFFF', fontWeight: '800' },
   loadingState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#8C827A', fontSize: 13, marginTop: 8 },
+  loadingText: { color: colors.textMuted, fontSize: 13, marginTop: 8 },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  emptyEmoji: { fontSize: 56, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#3D2D25' },
-  emptySubtitle: { fontSize: 13, color: '#8C827A', marginTop: 4, textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.textDark },
+  emptySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4, textAlign: 'center' },
   listContent: { padding: 16 },
 });

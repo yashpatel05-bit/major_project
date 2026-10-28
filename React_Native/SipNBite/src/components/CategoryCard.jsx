@@ -1,74 +1,96 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../theme/colors';
 
 export default function CategoryCard({ category, isActive, isSelected, onPress }) {
   const active = isActive || isSelected;
-  const emoji = getCategoryEmoji(category.name);
+  const iconConfig = getCategoryIcon(category.name);
 
   return (
     <Pressable
-      style={[styles.card, active && styles.cardActive]}
+      style={styles.container}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={category.name}
     >
-      <Text style={styles.emoji}>{emoji}</Text>
-      <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>
+      <View style={[styles.circle, active ? styles.circleActive : styles.circleInactive]}>
+        <Ionicons
+          name={active ? iconConfig.activeName : iconConfig.name}
+          size={24}
+          color={active ? '#FFFFFF' : colors.primary}
+        />
+      </View>
+      <Text
+        style={[styles.label, active && styles.labelActive]}
+        numberOfLines={1}
+      >
         {category.name}
       </Text>
     </Pressable>
   );
 }
 
-function getCategoryEmoji(name) {
+function getCategoryIcon(name) {
   const lower = (name || '').toLowerCase();
-  if (lower.includes('coffee') || lower.includes('beverage') || lower.includes('drink'))
-    return '☕';
-  if (lower.includes('pastry') || lower.includes('bakery') || lower.includes('bread'))
-    return '🥐';
-  if (lower.includes('bite') || lower.includes('snack') || lower.includes('sandwich'))
-    return '🥪';
-  if (lower.includes('dessert') || lower.includes('sweet') || lower.includes('cake'))
-    return '🍰';
-  if (lower.includes('pizza') || lower.includes('burger'))
-    return '🍕';
-  if (lower.includes('salad') || lower.includes('healthy'))
-    return '🥗';
-  return '🍴';
+  if (lower.includes('coffee') || lower.includes('hot') || lower.includes('brew')) {
+    return { name: 'cafe-outline', activeName: 'cafe' };
+  }
+  if (lower.includes('pastry') || lower.includes('bakery') || lower.includes('croissant') || lower.includes('bread')) {
+    return { name: 'nutrition-outline', activeName: 'nutrition' };
+  }
+  if (lower.includes('sandwich') || lower.includes('burger') || lower.includes('snack') || lower.includes('bite')) {
+    return { name: 'fast-food-outline', activeName: 'fast-food' };
+  }
+  if (lower.includes('dessert') || lower.includes('sweet') || lower.includes('cake') || lower.includes('muffin')) {
+    return { name: 'ice-cream-outline', activeName: 'ice-cream' };
+  }
+  if (lower.includes('drink') || lower.includes('beverage') || lower.includes('shake') || lower.includes('juice')) {
+    return { name: 'wine-outline', activeName: 'wine' };
+  }
+  if (lower.includes('breakfast') || lower.includes('meal') || lower.includes('special')) {
+    return { name: 'restaurant-outline', activeName: 'restaurant' };
+  }
+  return { name: 'cafe-outline', activeName: 'cafe' };
 }
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
-    height: 76,
+    marginRight: 14,
+    width: 68,
+  },
+  circle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
-    width: 78,
     elevation: 2,
-    shadowColor: '#E23744',
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
   },
-  cardActive: {
-    backgroundColor: '#E23744',
-    borderColor: '#E23744',
-    elevation: 4,
+  circleInactive: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
-  emoji: {
-    fontSize: 24,
-    marginBottom: 4,
+  circleActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    transform: [{ scale: 1.04 }],
   },
   label: {
-    color: '#8C7D73',
-    fontSize: 11,
-    fontWeight: '800',
+    color: colors.textMuted,
+    fontSize: 11.5,
+    fontWeight: '600',
+    marginTop: 6,
+    textAlign: 'center',
   },
   labelActive: {
-    color: '#FFFFFF',
+    color: colors.primaryDark,
+    fontWeight: '800',
   },
 });

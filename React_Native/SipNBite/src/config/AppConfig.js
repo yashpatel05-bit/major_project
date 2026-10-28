@@ -1,17 +1,14 @@
 import Constants from 'expo-constants';
-
-export const RAZORPAY_KEY = 'rzp_test_YOUR_KEY_HERE';
-export const RAZORPAY_SECRET = 'YOUR_SECRET_HERE';
-export const DISTANCE_MATRIX_API_KEY = 'YOUR_DISTANCE_MATRIX_API_KEY';
-
-// ──────────────────────────────────────────────────────────────
-// Your PC's local IP address (run `ipconfig` to find it).
-// Update this if your WiFi IP changes.
-// Make sure to start Laravel with: php artisan serve --host=0.0.0.0
-// ──────────────────────────────────────────────────────────────
 import { Platform } from 'react-native';
+import serverConfig from './serverConfig.json';
 
-// Automatically detect the current IP address from Expo
+export const RAZORPAY_KEY = 'rzp_test_TXveDStqLBJjaK';
+export const RAZORPAY_SECRET = 'FLXRT96zZHYQaR0M1gqy4wwO';
+export const DISTANCE_MATRIX_API_KEY = '1padf1Q3jnteeyaMMFa8kLDnzqxd815ay0VD9VP6omJwsEb8j5HJt86PIVRSvjtk';
+
+// ──────────────────────────────────────────────────────────────
+// Automatically detect the current IP address from Expo / serverConfig
+// ──────────────────────────────────────────────────────────────
 const getDevServerIp = () => {
   const hostUri = 
     Constants.expoConfig?.hostUri || 
@@ -25,7 +22,12 @@ const getDevServerIp = () => {
     }
   }
 
-  // Fallback to current Wi-Fi network IP
+  // Use auto-detected server IP from ensure-services.js
+  if (serverConfig && serverConfig.serverIp) {
+    return serverConfig.serverIp;
+  }
+
+  // Fallback to Wi-Fi network IP
   return '10.206.5.191';
 };
 

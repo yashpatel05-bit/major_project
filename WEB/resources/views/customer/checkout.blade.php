@@ -51,7 +51,7 @@
                     <div class="form-check p-3 border rounded-3">
                         <input class="form-check-input" type="radio" name="payment_method" id="pay_razorpay" value="Razorpay">
                         <label class="form-check-label fw-bold cursor-pointer" for="pay_razorpay">
-                            <i class="fa-solid fa-bolt text-warning me-2 fs-5"></i> Online Payment via Razorpay
+                            <i class="fa-solid fa-bolt text-warning me-2 fs-5"></i> Online Payment
                             <p class="small text-secondary fw-normal mb-0">UPI, Cards, NetBanking</p>
                         </label>
                     </div>
@@ -117,6 +117,13 @@
         var checkoutForm = document.getElementById('checkoutForm');
         
         checkoutForm.addEventListener('submit', function(e) {
+            var selectedAddr = document.querySelector('input[name="address_id"]:checked');
+            if (!selectedAddr) {
+                e.preventDefault();
+                alert('Please enter this field: Delivery Address. Please select or add an address to continue.');
+                return false;
+            }
+
             var selectedPayment = document.querySelector('input[name="payment_method"]:checked');
             var paymentMethod = selectedPayment ? selectedPayment.value : 'COD';
             

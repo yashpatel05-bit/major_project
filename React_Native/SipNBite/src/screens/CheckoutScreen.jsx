@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
-  Modal,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { checkout } from '../api/ApiClient';
+import { checkout, getUserAddresses } from '../api/ApiClient';
+import RazorpayPaymentModal from '../components/RazorpayPaymentModal';
+import { colors } from '../theme/colors';
 
 export default function CheckoutScreen({ navigation }) {
   const { user } = useAuth();
@@ -22,12 +25,27 @@ export default function CheckoutScreen({ navigation }) {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Razorpay Gateway Modal State
+  // Delivery Address State
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  // Real Razorpay Payment Gateway State
   const [showRazorpayModal, setShowRazorpayModal] = useState(false);
-  const [selectedOnlineOption, setSelectedOnlineOption] = useState('UPI');
-  const [processingPayment, setProcessingPayment] = useState(false);
 
   const totalAmount = Math.round(getTotal());
+
+  useEffect(() => {
+    if (user?.id) {
+      getUserAddresses(user.id)
+        .then((res) => {
+          if (res.data?.success && res.data.data?.length > 0) {
+            setAddresses(res.data.data);
+            setSelectedAddressId(res.data.data[0].id);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user?.id]);
 
   const handlePlaceOrderClick = () => {
     if (!user) {
@@ -43,22 +61,19 @@ export default function CheckoutScreen({ navigation }) {
     }
 
     if (paymentMethod === 'Razorpay') {
-      // Launch Interactive Razorpay Online Gateway
       setShowRazorpayModal(true);
     } else {
-      // Proceed with Cash on Delivery
       executeCheckoutSubmit('COD', null);
     }
   };
 
-  const handleConfirmRazorpayPayment = () => {
-    setProcessingPayment(true);
-    setTimeout(() => {
-      setProcessingPayment(false);
-      setShowRazorpayModal(false);
-      const generatedId = `pay_rzp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      executeCheckoutSubmit('Razorpay', generatedId);
-    }, 1200);
+  const handleRazorpaySuccess = (paymentId) => {
+    setShowRazorpayModal(false);
+    executeCheckoutSubmit('Razorpay', paymentId);
+  };
+
+  const handleRazorpayCancel = () => {
+    setShowRazorpayModal(false);
   };
 
   const executeCheckoutSubmit = async (method, razorpayPaymentId) => {
@@ -75,7 +90,7 @@ export default function CheckoutScreen({ navigation }) {
 
       const requestData = {
         user_id: user.id,
-        address_id: null,
+        address_id: selectedAddressId || null,
         payment_method: method,
         razorpay_payment_id: razorpayPaymentId,
         notes: notes.trim() || null,
@@ -88,7 +103,7 @@ export default function CheckoutScreen({ navigation }) {
         clear();
         Alert.alert(
           '🎉 Order Placed Successfully!',
-          `Your order #${res.data.data.id} has been received and sent to the kitchen!`,
+          `Your order #${res.data.data.order_number || res.data.data.id} has been received and sent to the barista & kitchen!`,
           [
             {
               text: 'Track Order',
@@ -119,20 +134,66 @@ export default function CheckoutScreen({ navigation }) {
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color="#1F1610" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </Pressable>
         <Text style={styles.headerTitle}>Order Checkout</Text>
-        <View style={{ width: 32 }} />
+        <View style={{ width: 36 }} />
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
+        {/* Delivery Address Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="location-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.sectionTitle}>Delivery Address</Text>
+          </View>
+          {addresses.length > 0 ? (
+            <View style={styles.addressContainer}>
+              {addresses.map((addr) => {
+                const isSelected = selectedAddressId === addr.id;
+                return (
+                  <Pressable
+                    key={addr.id}
+                    style={[styles.addressCard, isSelected && styles.addressCardSelected]}
+                    onPress={() => setSelectedAddressId(addr.id)}
+                  >
+                    <Ionicons
+                      name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                      size={20}
+                      color={isSelected ? colors.primary : colors.textMuted}
+                      style={{ marginRight: 10 }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.addressTitle}>{addr.title}</Text>
+                      <Text style={styles.addressLine} numberOfLines={2}>{addr.address_line}</Text>
+                      {(addr.city || addr.pincode) && (
+                        <Text style={styles.addressCity}>
+                          {[addr.city, addr.pincode].filter(Boolean).join(' - ')}
+                        </Text>
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={styles.noAddressCard}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
+              <Text style={styles.noAddressText}>
+                No saved address. Deliver to default location or add in Profile.
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* Order Summary Card */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Ionicons name="cart-outline" size={18} color="#E23744" style={{ marginRight: 6 }} />
+            <Ionicons name="cart-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
             <Text style={styles.sectionTitle}>Items in Order</Text>
           </View>
           <View style={styles.summaryCard}>
@@ -157,7 +218,7 @@ export default function CheckoutScreen({ navigation }) {
         {/* Payment Method Selector */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Ionicons name="card-outline" size={18} color="#E23744" style={{ marginRight: 6 }} />
+            <Ionicons name="card-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
             <Text style={styles.sectionTitle}>Choose Payment Method</Text>
           </View>
           <View style={styles.paymentOptions}>
@@ -168,12 +229,12 @@ export default function CheckoutScreen({ navigation }) {
               ]}
               onPress={() => setPaymentMethod('COD')}
             >
-              <Ionicons name="cash-outline" size={24} color="#2E7D32" style={{ marginRight: 12 }} />
+              <Ionicons name="cash-outline" size={24} color={colors.primary} style={{ marginRight: 12 }} />
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Cash on Delivery</Text>
-                <Text style={styles.optionSubtitle}>Pay in cash when order arrives</Text>
+                <Text style={styles.optionSubtitle}>Pay in cash when your order arrives</Text>
               </View>
-              {paymentMethod === 'COD' && <Ionicons name="checkmark-circle" size={20} color="#E23744" />}
+              {paymentMethod === 'COD' && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </Pressable>
 
             <Pressable
@@ -183,12 +244,12 @@ export default function CheckoutScreen({ navigation }) {
               ]}
               onPress={() => setPaymentMethod('Razorpay')}
             >
-              <Ionicons name="card-outline" size={24} color="#E23744" style={{ marginRight: 12 }} />
+              <Ionicons name="card-outline" size={24} color={colors.primary} style={{ marginRight: 12 }} />
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Online Payment (Razorpay)</Text>
-                <Text style={styles.optionSubtitle}>UPI / GPay, Cards, NetBanking</Text>
+                <Text style={styles.optionSubtitle}>Real UPI, Google Pay, Cards, NetBanking</Text>
               </View>
-              {paymentMethod === 'Razorpay' && <Ionicons name="checkmark-circle" size={20} color="#E23744" />}
+              {paymentMethod === 'Razorpay' && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </Pressable>
           </View>
         </View>
@@ -196,17 +257,17 @@ export default function CheckoutScreen({ navigation }) {
         {/* Delivery Note Input */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Ionicons name="document-text-outline" size={18} color="#E23744" style={{ marginRight: 6 }} />
+            <Ionicons name="document-text-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
             <Text style={styles.sectionTitle}>Delivery Instructions (Optional)</Text>
           </View>
           <TextInput
             style={styles.notesInput}
-            placeholder="e.g. Please leave at front door, ring doorbell..."
-            placeholderTextColor="#A79D93"
             value={notes}
             onChangeText={setNotes}
             multiline
             numberOfLines={3}
+            placeholder="e.g. Leave with security, extra napkins..."
+            placeholderTextColor={colors.textMuted}
           />
         </View>
       </ScrollView>
@@ -232,128 +293,104 @@ export default function CheckoutScreen({ navigation }) {
         </Pressable>
       </View>
 
-      {/* Razorpay Interactive Gateway Modal */}
-      <Modal
+      {/* Real Razorpay Online Payment Gateway Modal */}
+      <RazorpayPaymentModal
         visible={showRazorpayModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowRazorpayModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.razorpayCard}>
-            <View style={styles.razorpayHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="flash" size={16} color="#00BAF2" style={{ marginRight: 4 }} />
-                <Text style={styles.razorpayLogo}>Razorpay Secure</Text>
-              </View>
-              <Pressable onPress={() => setShowRazorpayModal(false)}>
-                <Ionicons name="close" size={22} color="#1F1610" />
-              </Pressable>
-            </View>
-
-            <View style={styles.merchantBox}>
-              <Text style={styles.merchantName}>Sip N Bite Café</Text>
-              <Text style={styles.merchantAmount}>₹{totalAmount}.00</Text>
-            </View>
-
-            <Text style={styles.payOptionHeader}>Select Payment Mode:</Text>
-            <View style={styles.onlineMethodList}>
-              {[
-                { id: 'UPI', label: 'Google Pay / PhonePe / UPI', iconName: 'phone-portrait-outline' },
-                { id: 'CARD', label: 'Credit / Debit Card', iconName: 'card-outline' },
-                { id: 'NETBANKING', label: 'Net Banking', iconName: 'business-outline' },
-              ].map((opt) => (
-                <Pressable
-                  key={opt.id}
-                  style={[
-                    styles.onlineOptionItem,
-                    selectedOnlineOption === opt.id && styles.onlineOptionSelected,
-                  ]}
-                  onPress={() => setSelectedOnlineOption(opt.id)}
-                >
-                  <Ionicons name={opt.iconName} size={22} color="#E23744" style={{ marginRight: 10 }} />
-                  <Text style={styles.onlineOptionText}>{opt.label}</Text>
-                  {selectedOnlineOption === opt.id && <Ionicons name="checkmark-circle" size={18} color="#E23744" />}
-                </Pressable>
-              ))}
-            </View>
-
-            {processingPayment ? (
-              <View style={styles.processingBox}>
-                <ActivityIndicator size="large" color="#E23744" />
-                <Text style={styles.processingText}>Authenticating with Bank Gateway...</Text>
-              </View>
-            ) : (
-              <View style={styles.modalActionRow}>
-                <Pressable
-                  style={styles.cancelPayButton}
-                  onPress={() => setShowRazorpayModal(false)}
-                >
-                  <Text style={styles.cancelPayText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.payNowButton}
-                  onPress={handleConfirmRazorpayPayment}
-                >
-                  <Text style={styles.payNowText}>Pay ₹{totalAmount} Now</Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
+        amount={totalAmount}
+        description="Sip N Bite Café Food Order"
+        userInfo={{
+          name: user?.name,
+          email: user?.email,
+          phone: user?.phone,
+        }}
+        onSuccess={handleRazorpaySuccess}
+        onCancel={handleRazorpayCancel}
+        onClose={() => setShowRazorpayModal(false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFBF7' },
+  container: { flex: 1, backgroundColor: colors.background },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: Platform.OS === 'android' ? ((StatusBar.currentHeight || 28) + 8) : 12,
     paddingBottom: 14,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#FFE4D6',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  backButton: { width: 32, height: 32, justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1F1610' },
+  backButton: { width: 36, height: 36, justifyContent: 'center' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.primaryDark,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
   scrollContent: { padding: 16, paddingBottom: 120 },
   section: { marginBottom: 20 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  sectionTitle: { fontSize: 15, fontWeight: '900', color: '#1F1610' },
-  summaryCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderColor: '#FFE4D6', borderWidth: 1.5, elevation: 2 },
+  sectionTitle: { fontSize: 14.5, fontWeight: '800', color: colors.textDark },
+  addressContainer: { gap: 10 },
+  addressCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: 12,
+  },
+  addressCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceAlt,
+  },
+  addressTitle: { fontSize: 13, fontWeight: '800', color: colors.textDark },
+  addressLine: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  addressCity: { fontSize: 11, color: colors.textPlaceholder, marginTop: 1 },
+  noAddressCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: 12,
+  },
+  noAddressText: { fontSize: 12, color: colors.textMuted, flex: 1 },
+  summaryCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderColor: colors.border, borderWidth: 1, elevation: 2 },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 4 },
-  itemName: { fontSize: 14, color: '#5C4E43', flex: 1, fontWeight: '600' },
-  itemPrice: { fontSize: 14, fontWeight: '800', color: '#1F1610' },
-  divider: { height: 1.5, backgroundColor: '#FFE4D6', marginVertical: 10 },
-  totalLabel: { fontSize: 16, fontWeight: '900', color: '#1F1610' },
-  totalValue: { fontSize: 18, fontWeight: '900', color: '#E23744' },
+  itemName: { fontSize: 13.5, color: colors.textMuted, flex: 1, fontWeight: '600' },
+  itemPrice: { fontSize: 13.5, fontWeight: '800', color: colors.textDark },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 10 },
+  totalLabel: { fontSize: 15, fontWeight: '900', color: colors.textDark },
+  totalValue: { fontSize: 17, fontWeight: '900', color: colors.primaryDark },
   paymentOptions: { gap: 10 },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 16,
     padding: 14,
   },
-  optionCardSelected: { borderColor: '#E23744', backgroundColor: '#FFF5F0' },
+  optionCardSelected: { borderColor: colors.primary, backgroundColor: colors.surfaceAlt },
   optionInfo: { flex: 1 },
-  optionTitle: { fontSize: 14, fontWeight: '900', color: '#1F1610' },
-  optionSubtitle: { fontSize: 12, color: '#8C7D73', marginTop: 2, fontWeight: '600' },
+  optionTitle: { fontSize: 14, fontWeight: '800', color: colors.textDark },
+  optionSubtitle: { fontSize: 11.5, color: colors.textMuted, marginTop: 2, fontWeight: '500' },
   notesInput: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 16,
     padding: 14,
-    fontSize: 14,
-    color: '#1F1610',
+    fontSize: 13.5,
+    color: colors.textDark,
     textAlignVertical: 'top',
     height: 80,
   },
@@ -363,86 +400,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1.5,
-    borderTopColor: '#FFE4D6',
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 8,
   },
-  bottomTotalLabel: { fontSize: 11, color: '#8C7D73', fontWeight: '700' },
-  bottomTotalVal: { fontSize: 20, fontWeight: '900', color: '#E23744' },
+  bottomTotalLabel: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
+  bottomTotalVal: { fontSize: 20, fontWeight: '900', color: colors.primaryDark },
   placeOrderButton: {
-    backgroundColor: '#E23744',
+    backgroundColor: colors.primary,
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    elevation: 4,
+    elevation: 3,
   },
   buttonDisabled: { opacity: 0.6 },
-  placeOrderText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-
-  // Razorpay Gateway Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  razorpayCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-  },
-  razorpayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  razorpayLogo: { fontSize: 16, fontWeight: '900', color: '#00BAF2' },
-  merchantBox: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: '#BAE6FD',
-  },
-  merchantName: { fontSize: 14, fontWeight: '900', color: '#0369A1' },
-  merchantAmount: { fontSize: 28, fontWeight: '900', color: '#0284C7', marginVertical: 4 },
-  payOptionHeader: { fontSize: 13, fontWeight: '900', color: '#1F1610', marginBottom: 10 },
-  onlineMethodList: { gap: 8, marginBottom: 20 },
-  onlineOptionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-  },
-  onlineOptionSelected: { borderColor: '#E23744', backgroundColor: '#FFF5F0' },
-  onlineOptionText: { flex: 1, fontSize: 13, fontWeight: '700', color: '#1F1610' },
-  processingBox: { alignItems: 'center', paddingVertical: 20 },
-  processingText: { marginTop: 12, fontSize: 14, fontWeight: '900', color: '#E23744' },
-  modalActionRow: { flexDirection: 'row', gap: 12 },
-  cancelPayButton: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderRadius: 14,
-    backgroundColor: '#F3F4F6',
-  },
-  cancelPayText: { fontSize: 14, fontWeight: '900', color: '#6B7280' },
-  payNowButton: {
-    flex: 2,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderRadius: 14,
-    backgroundColor: '#E23744',
-  },
-  payNowText: { fontSize: 14, fontWeight: '900', color: '#FFFFFF' },
+  placeOrderText: { color: '#FFFFFF', fontSize: 13.5, fontWeight: '800' },
 });

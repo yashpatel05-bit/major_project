@@ -23,7 +23,11 @@ class Order extends Model
         'razorpay_order_id',
         'razorpay_payment_id',
         'order_status',
-        'notes'
+        'notes',
+        'cancellation_fee',
+        'cancellation_reason',
+        'cancellation_payment_id',
+        'cancelled_at'
     ];
 
     public function user()
@@ -48,7 +52,12 @@ class Order extends Model
 
     public function payment()
     {
-        return $this->hasOne(Payment::class);
+        return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function feedback()

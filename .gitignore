@@ -49,6 +49,10 @@ demo_android_application/
 final_major_project/
 WEB.rar
 
+# Python cache
+__pycache__/
+*.pyc
+
 # OS & Editor files
 .DS_Store
 Thumbs.db

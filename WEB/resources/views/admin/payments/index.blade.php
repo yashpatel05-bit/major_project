@@ -28,7 +28,11 @@
                                     <td class="ps-4 fw-mono text-dark">{{ $p->razorpay_payment_id }}</td>
                                     <td class="fw-bold">#{{ $p->order ? $p->order->order_number : 'N/A' }}</td>
                                     <td class="fw-bold text-success">₹{{ number_format($p->amount, 2) }}</td>
-                                    <td><span class="badge bg-success text-uppercase">SUCCESS</span></td>
+                                    <td>
+                                        <span class="badge bg-{{ str_contains(strtolower($p->status ?? ''), 'cancellation') ? 'danger' : 'success' }} text-uppercase">
+                                            {{ $p->status ?: 'SUCCESS' }}
+                                        </span>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="text-center py-4 text-secondary">No Razorpay online transactions recorded yet.</td></tr>

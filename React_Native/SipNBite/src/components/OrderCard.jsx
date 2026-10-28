@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
 
 export default function OrderCard({ order, onPress }) {
   const statusColor = getStatusColor(order.order_status);
@@ -8,7 +9,7 @@ export default function OrderCard({ order, onPress }) {
     <Pressable style={styles.card} onPress={() => onPress(order)} accessibilityRole="button">
       <View style={styles.topRow}>
         <Text style={styles.orderNumber}>#{order.order_number}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor + '22' }]}>
+        <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
           <Text style={[styles.statusText, { color: statusColor }]}>
             {(order.order_status || 'Pending').toUpperCase()}
           </Text>
@@ -28,6 +29,12 @@ export default function OrderCard({ order, onPress }) {
         </Text>
       </View>
 
+      {Number(order.cancellation_fee || 0) > 0 && (
+        <Text style={styles.cancellationFeeTag}>
+          Cancellation Fee: ₹{Math.round(order.cancellation_fee)} Paid (Online)
+        </Text>
+      )}
+
       {order.created_at && (
         <Text style={styles.date}>
           {new Date(order.created_at).toLocaleDateString('en-IN', {
@@ -46,18 +53,18 @@ export default function OrderCard({ order, onPress }) {
 function getStatusColor(status) {
   switch ((status || '').toLowerCase()) {
     case 'pending':
-      return '#E6A817';
+      return '#B45309';
     case 'confirmed':
     case 'preparing':
-      return '#2196F3';
+      return '#1D4ED8';
     case 'out for delivery':
-      return '#FF9800';
+      return '#C2410C';
     case 'delivered':
-      return '#4CAF50';
+      return '#15803D';
     case 'cancelled':
-      return '#C62828';
+      return '#B91C1C';
     default:
-      return '#9B8D7B';
+      return '#6B7280';
   }
 }
 
@@ -65,15 +72,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
     marginBottom: 12,
     padding: 16,
-    shadowColor: '#E23744',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
   topRow: {
     alignItems: 'center',
@@ -81,24 +88,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   orderNumber: {
-    color: '#1F1610',
-    fontSize: 16,
+    color: colors.textDark,
+    fontSize: 15,
     fontWeight: '900',
   },
   statusBadge: {
-    borderRadius: 10,
+    borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.6,
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   items: {
-    color: '#5C4E43',
+    color: colors.textMuted,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     lineHeight: 17,
     marginTop: 8,
   },
@@ -109,19 +116,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   total: {
-    color: '#E23744',
-    fontSize: 17,
+    color: colors.primaryDark,
+    fontSize: 16,
     fontWeight: '900',
   },
   payment: {
-    color: '#8C7D73',
+    color: colors.textMuted,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   date: {
-    color: '#8C7D73',
+    color: colors.textPlaceholder,
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '500',
     marginTop: 6,
+  },
+  cancellationFeeTag: {
+    color: '#DC2626',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 4,
   },
 });

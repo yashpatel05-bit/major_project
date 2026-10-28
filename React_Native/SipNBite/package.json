@@ -17,7 +17,8 @@
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0"
+    "react-native-screens": "~4.26.0",
+    "react-native-webview": "13.16.1"
   },
   "publishConfig": {
     "executableFiles": [
@@ -25,10 +26,11 @@
     ]
   },
   "scripts": {
-    "start": "expo start --dev-client",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web"
+    "start": "node scripts/start.js",
+    "android": "node scripts/start.js --android",
+    "ios": "node scripts/start.js --ios",
+    "web": "node scripts/start.js --web",
+    "connect": "node scripts/ensure-services.js"
   },
   "private": true,
   "devDependencies": {

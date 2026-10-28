@@ -364,6 +364,90 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Universal Form Validation for all Customer/Web Forms
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        if (!form || form.tagName !== 'FORM') return;
+        if (form.method && form.method.toLowerCase() === 'get') return;
+        if (form.hasAttribute('data-no-validate')) return;
+
+        const requiredInputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+        let firstInvalid = null;
+        let missingFieldLabel = '';
+
+        requiredInputs.forEach(function (input) {
+            input.classList.remove('is-invalid');
+            const parent = input.closest('.mb-3, .mb-2, .mb-4, .col-md-6, .col-md-12, .col-12') || input.parentElement;
+            const existingFeedback = parent ? parent.querySelector('.auto-invalid-feedback') : null;
+            if (existingFeedback) existingFeedback.remove();
+
+            let isValEmpty = false;
+            if (input.type === 'file') {
+                isValEmpty = !input.files || input.files.length === 0;
+            } else if (input.type === 'radio' || input.type === 'checkbox') {
+                const checked = form.querySelector(`input[name="${input.name}"]:checked`);
+                isValEmpty = !checked;
+            } else {
+                isValEmpty = !input.value || input.value.trim() === '';
+            }
+
+            if (isValEmpty) {
+                input.classList.add('is-invalid');
+
+                let labelText = '';
+                const label = (parent ? parent.querySelector('label') : null) || form.querySelector(`label[for="${input.id}"]`);
+                if (label) {
+                    labelText = label.innerText.replace('*', '').trim();
+                }
+                if (!labelText && input.name) {
+                    labelText = input.name.replace(/_/g, ' ');
+                    labelText = labelText.charAt(0).toUpperCase() + labelText.slice(1);
+                }
+
+                const errorMsg = labelText ? `Please enter ${labelText}.` : 'Please enter this field.';
+
+                const errDiv = document.createElement('div');
+                errDiv.className = 'invalid-feedback auto-invalid-feedback d-block fw-semibold text-danger small mt-1';
+                errDiv.textContent = errorMsg;
+
+                if (input.parentNode.classList.contains('input-group')) {
+                    input.parentNode.parentNode.appendChild(errDiv);
+                } else if (parent) {
+                    parent.appendChild(errDiv);
+                } else {
+                    input.parentNode.appendChild(errDiv);
+                }
+
+                if (!firstInvalid) {
+                    firstInvalid = input;
+                    missingFieldLabel = labelText || 'required field';
+                }
+
+                const clearFeedback = function () {
+                    input.classList.remove('is-invalid');
+                    errDiv.remove();
+                    input.removeEventListener('input', clearFeedback);
+                    input.removeEventListener('change', clearFeedback);
+                };
+                input.addEventListener('input', clearFeedback);
+                input.addEventListener('change', clearFeedback);
+            }
+        });
+
+        if (firstInvalid) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            alert(`Please enter this field: ${missingFieldLabel}`);
+            firstInvalid.focus();
+            if (typeof firstInvalid.scrollIntoView === 'function') {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+    }, true);
+    </script>
     @yield('scripts')
 </body>
 </html>

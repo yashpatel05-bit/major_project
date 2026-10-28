@@ -6,47 +6,36 @@
 @section('content')
 <!-- Quick Stats Analytics Summary -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-secondary small fw-semibold text-uppercase">Total Revenue</span>
-                    <h3 class="fw-bold mb-0 text-danger">₹{{ number_format($orders->filter(fn($o) => strtolower($o->payment_status ?? '') === 'paid')->sum('total_amount'), 2) }}</h3>
-                </div>
-                <div class="bg-danger-subtle text-danger rounded-circle p-3 fs-4">💰</div>
-            </div>
+    <div class="col-lg-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-secondary small fw-semibold text-uppercase">Total Revenue</span>
+            <h4 class="fw-bold mb-0 text-danger mt-1">₹{{ number_format($orders->filter(fn($o) => strtolower($o->payment_status ?? '') === 'paid')->sum('total_amount') + $orders->sum('cancellation_fee'), 2) }}</h4>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-secondary small fw-semibold text-uppercase">Pending Orders</span>
-                    <h3 class="fw-bold mb-0 text-warning">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'pending')->count() }}</h3>
-                </div>
-                <div class="bg-warning-subtle text-warning rounded-circle p-3 fs-4">⏳</div>
-            </div>
+    <div class="col-lg-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-secondary small fw-semibold text-uppercase">Pending</span>
+            <h4 class="fw-bold mb-0 text-warning mt-1">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'pending')->count() }}</h4>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-secondary small fw-semibold text-uppercase">Kitchen Preparing</span>
-                    <h3 class="fw-bold mb-0 text-info">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'preparing')->count() }}</h3>
-                </div>
-                <div class="bg-info-subtle text-info rounded-circle p-3 fs-4">🍳</div>
-            </div>
+    <div class="col-lg-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-secondary small fw-semibold text-uppercase">Kitchen</span>
+            <h4 class="fw-bold mb-0 text-info mt-1">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'preparing')->count() }}</h4>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-secondary small fw-semibold text-uppercase">Out for Delivery</span>
-                    <h3 class="fw-bold mb-0 text-primary">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'out for delivery')->count() }}</h3>
-                </div>
-                <div class="bg-primary-subtle text-primary rounded-circle p-3 fs-4">🛵</div>
+    <div class="col-lg-3 col-md-6 col-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-secondary small fw-semibold text-uppercase">Out for Delivery</span>
+            <h4 class="fw-bold mb-0 text-primary mt-1">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'out for delivery')->count() }}</h4>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-start border-danger border-4">
+            <span class="text-danger small fw-bold text-uppercase">Cancelled Orders</span>
+            <div class="d-flex align-items-center justify-content-between mt-1">
+                <h4 class="fw-bold mb-0 text-danger">{{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'cancelled')->count() }}</h4>
+                <span class="badge bg-danger-subtle text-danger small">Fees: ₹{{ number_format($orders->sum('cancellation_fee'), 0) }}</span>
             </div>
         </div>
     </div>
@@ -59,6 +48,7 @@
         <a href="{{ route('admin.orders.index', ['status' => 'Preparing']) }}" class="btn btn-sm rounded-pill {{ request('status') == 'Preparing' ? 'btn-info text-white' : 'btn-outline-info' }}">Preparing</a>
         <a href="{{ route('admin.orders.index', ['status' => 'Out for Delivery']) }}" class="btn btn-sm rounded-pill {{ request('status') == 'Out for Delivery' ? 'btn-primary' : 'btn-outline-primary' }}">Out for Delivery</a>
         <a href="{{ route('admin.orders.index', ['status' => 'Delivered']) }}" class="btn btn-sm rounded-pill {{ request('status') == 'Delivered' ? 'btn-success' : 'btn-outline-success' }}">Delivered</a>
+        <a href="{{ route('admin.orders.index', ['status' => 'Cancelled']) }}" class="btn btn-sm rounded-pill {{ request('status') == 'Cancelled' ? 'btn-danger text-white' : 'btn-outline-danger' }}">Cancelled ({{ $orders->filter(fn($o) => strtolower($o->order_status ?? '') === 'cancelled')->count() }})</a>
     </div>
     <button onclick="window.print()" class="btn btn-sm btn-outline-dark rounded-pill px-3">
         <i class="fa-solid fa-print me-1"></i> Print Orders Summary
@@ -113,6 +103,11 @@
                                 <span class="badge {{ $badgeClass }} text-uppercase px-3 py-1">
                                     {{ $ord->order_status }}
                                 </span>
+                                @if(strtolower($ord->order_status ?? '') === 'cancelled' && $ord->cancellation_fee > 0)
+                                    <div class="small text-danger fw-semibold mt-1">
+                                        <i class="fa-solid fa-receipt me-1"></i> Fee: ₹{{ number_format($ord->cancellation_fee, 2) }}
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 <form action="{{ route('admin.orders.update-status', $ord->id) }}" method="POST" id="dp_form_{{ $ord->id }}">

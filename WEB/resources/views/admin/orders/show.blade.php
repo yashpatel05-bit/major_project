@@ -6,6 +6,35 @@
 @section('content')
 <div class="row g-4">
     <div class="col-lg-8">
+        @if($order->order_status === 'Cancelled')
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-danger-subtle text-danger border-start border-danger border-5">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-ban me-2"></i> Order Cancelled by Customer</h5>
+                    <span class="badge bg-danger fs-6 px-3 py-1">CANCELLED</span>
+                </div>
+                <p class="mb-2 text-dark"><strong>Reason:</strong> {{ $order->cancellation_reason ?: 'Cancelled by customer on tracking screen' }}</p>
+                <div class="row g-2 mt-1">
+                    <div class="col-md-4">
+                        <span class="small text-secondary d-block">Cancellation Fee</span>
+                        <strong class="text-danger fs-5">₹{{ number_format($order->cancellation_fee, 2) }} (Paid)</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="small text-secondary d-block">Payment Mode</span>
+                        <strong class="text-dark">Online (Razorpay)</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="small text-secondary d-block">Razorpay Payment ID</span>
+                        <code class="text-dark">{{ $order->cancellation_payment_id ?: 'N/A' }}</code>
+                    </div>
+                </div>
+                @if($order->cancelled_at)
+                    <div class="mt-2 small text-secondary">
+                        <i class="fa-solid fa-clock me-1"></i> Cancelled on: {{ \Carbon\Carbon::parse($order->cancelled_at)->format('d M Y, h:i A') }}
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <!-- Order Items -->
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
             <h5 class="fw-bold mb-3 border-bottom pb-2">Purchased Menu Items</h5>
@@ -45,8 +74,14 @@
                     <span>Delivery Fee</span>
                     <span>₹{{ number_format($order->delivery_fee, 2) }}</span>
                 </div>
+                @if($order->cancellation_fee > 0)
+                    <div class="d-flex justify-content-between mb-2 text-danger fw-bold">
+                        <span>Cancellation Fee (Paid via Razorpay)</span>
+                        <span>+ ₹{{ number_format($order->cancellation_fee, 2) }}</span>
+                    </div>
+                @endif
                 <div class="d-flex justify-content-between border-top pt-2">
-                    <span class="fw-bold fs-5">Total Paid</span>
+                    <span class="fw-bold fs-5">{{ $order->order_status === 'Cancelled' ? 'Original Order Value' : 'Total Paid' }}</span>
                     <span class="fw-bold fs-4 text-danger">₹{{ number_format($order->total_amount, 2) }}</span>
                 </div>
             </div>
@@ -81,7 +116,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Assign Delivery Personnel</label>
+                    <label class="form-label fw-semibold">Assign Delivery Partners</label>
                     <select name="delivery_person_id" class="form-select bg-light">
                         <option value="">Unassigned</option>
                         @foreach($deliveryPersons as $dp)

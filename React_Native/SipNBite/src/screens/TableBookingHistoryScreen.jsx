@@ -10,10 +10,12 @@ import {
   Alert,
   ToastAndroid,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { getUserBookings, cancelBooking } from '../api/ApiClient';
+import { colors } from '../theme/colors';
 
 export default function TableBookingHistoryScreen({ navigation }) {
   const { user } = useAuth();
@@ -80,7 +82,7 @@ export default function TableBookingHistoryScreen({ navigation }) {
     const s = (status || 'pending').toLowerCase();
     if (s === 'confirmed' || s === 'approved') {
       return {
-        label: 'CONFIRMED BY ADMIN',
+        label: 'CONFIRMED BY CAFE',
         bgColor: '#DCFCE7',
         textColor: '#15803D',
         borderColor: '#86EFAC',
@@ -101,7 +103,7 @@ export default function TableBookingHistoryScreen({ navigation }) {
       bgColor: '#FEF3C7',
       textColor: '#B45309',
       borderColor: '#FDE68A',
-      desc: 'Admin is reviewing your reservation request.',
+      desc: 'Cafe staff is reviewing your reservation request.',
     };
   };
 
@@ -110,27 +112,27 @@ export default function TableBookingHistoryScreen({ navigation }) {
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color="#1F1610" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </Pressable>
         <View style={{ alignItems: 'center' }}>
           <Text style={styles.headerTitle}>My Table Status</Text>
           <Text style={styles.syncText}>Last synced {lastSynced}</Text>
         </View>
         <Pressable onPress={() => fetchBookings(true)} style={styles.refreshBtn}>
-          <Ionicons name="refresh" size={20} color="#E23744" />
+          <Ionicons name="refresh" size={20} color={colors.primary} />
         </Pressable>
       </View>
 
       {loading && !refreshing ? (
         <View style={styles.loadingState}>
-          <ActivityIndicator size="large" color="#E23744" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Fetching reservation status...</Text>
         </View>
       ) : bookings.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="restaurant-outline" size={48} color="#E23744" style={{ marginBottom: 10 }} />
+          <Ionicons name="calendar-outline" size={54} color={colors.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>No Table Reservations Yet</Text>
-          <Text style={styles.emptySubtitle}>Book a table at Sip N Bite and track admin approval live here!</Text>
+          <Text style={styles.emptySubtitle}>Book a table at Sip & Bite and track approval live here!</Text>
           <Pressable
             style={styles.bookNowBtn}
             onPress={() => navigation.navigate('TableBooking')}
@@ -148,8 +150,8 @@ export default function TableBookingHistoryScreen({ navigation }) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#E23744']}
-              tintColor="#E23744"
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
           renderItem={({ item }) => {
@@ -208,73 +210,68 @@ export default function TableBookingHistoryScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFBF7' },
+  container: { flex: 1, backgroundColor: colors.background },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: Platform.OS === 'android' ? ((StatusBar.currentHeight || 28) + 8) : 12,
     paddingBottom: 14,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#FFE4D6',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  backButton: { width: 32, height: 32, justifyContent: 'center' },
-  backText: { fontSize: 28, color: '#1F1610', fontWeight: '900', lineHeight: 30 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1F1610' },
-  syncText: { fontSize: 10, color: '#FF9100', fontWeight: '700', marginTop: 1 },
+  backButton: { width: 36, height: 36, justifyContent: 'center' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.primaryDark,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  syncText: { fontSize: 10, color: colors.textMuted, fontWeight: '700', marginTop: 1 },
   refreshBtn: { padding: 4 },
   loadingState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#8C7D73', fontSize: 13, marginTop: 10, fontWeight: '700' },
+  loadingText: { color: colors.textMuted, fontSize: 13, marginTop: 10, fontWeight: '700' },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  emptyEmoji: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '900', color: '#1F1610' },
-  emptySubtitle: { fontSize: 13, color: '#8C7D73', marginTop: 6, marginBottom: 24, textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '900', color: colors.textDark },
+  emptySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 6, marginBottom: 20, textAlign: 'center' },
   bookNowBtn: {
-    backgroundColor: '#E23744',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
     borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#E23744',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    elevation: 3,
   },
-  bookNowText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  bookNowText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
   listContent: { padding: 16, paddingBottom: 40 },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 16,
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
-    elevation: 4,
-    shadowColor: '#E23744',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  tableBadge: { backgroundColor: '#FFF3EB', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
-  tableBadgeText: { color: '#E23744', fontWeight: '900', fontSize: 14 },
-  guestsBadge: { fontSize: 13, fontWeight: '800', color: '#1F1610' },
+  tableBadge: { backgroundColor: colors.surfaceAlt, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
+  tableBadgeText: { color: colors.primaryDark, fontWeight: '900', fontSize: 13.5 },
+  guestsBadge: { fontSize: 13, fontWeight: '800', color: colors.textDark },
   statusBox: {
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    marginBottom: 14,
+    marginBottom: 12,
   },
-  statusTitle: { fontSize: 13, fontWeight: '900' },
-  statusDesc: { fontSize: 11, fontWeight: '700', marginTop: 2 },
-  detailsRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#FFF9F5', padding: 12, borderRadius: 12 },
+  statusTitle: { fontSize: 12.5, fontWeight: '900' },
+  statusDesc: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+  detailsRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.surfaceAlt, padding: 12, borderRadius: 12 },
   detailItem: { flex: 1 },
-  detailLabel: { fontSize: 10, fontWeight: '900', color: '#8C7D73' },
-  detailValue: { fontSize: 14, fontWeight: '900', color: '#1F1610', marginTop: 2 },
-  notesBox: { marginTop: 10, backgroundColor: '#FFF8F0', borderRadius: 10, padding: 10 },
-  notesLabel: { fontSize: 12, color: '#5C4E43', fontWeight: '700' },
-  cancelBtn: { marginTop: 12, backgroundColor: '#FEE2E2', borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
-  cancelBtnText: { color: '#DC2626', fontSize: 13, fontWeight: '900' },
+  detailLabel: { fontSize: 9.5, fontWeight: '800', color: colors.textMuted },
+  detailValue: { fontSize: 13.5, fontWeight: '800', color: colors.textDark, marginTop: 2 },
+  notesBox: { marginTop: 10, backgroundColor: colors.surfaceAlt, borderRadius: 10, padding: 10 },
+  notesLabel: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
+  cancelBtn: { marginTop: 12, backgroundColor: colors.errorBg, borderRadius: 10, paddingVertical: 8, alignItems: 'center' },
+  cancelBtnText: { color: colors.error, fontSize: 12, fontWeight: '800' },
 });

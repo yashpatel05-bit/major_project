@@ -134,4 +134,67 @@ class OrderApiController extends Controller
             'data' => $order
         ]);
     }
+
+    public function cancelOrder(Request $request, $id)
+    {
+        $request->validate([
+            'razorpay_payment_id' => 'required|string',
+        ]);
+
+        $order = Order::find($id);
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found.'
+            ], 404);
+        }
+
+        if ($request->filled('user_id') && $order->user_id && (string)$order->user_id !== (string)$request->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: This order belongs to another customer account.'
+            ], 403);
+        }
+
+        if (in_array($order->order_status, ['Delivered', 'Cancelled'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Order cannot be cancelled as it is already {$order->order_status}."
+            ], 400);
+        }
+
+        // Release delivery partner if assigned
+        if ($order->delivery_person_id) {
+            $dp = DeliveryPerson::find($order->delivery_person_id);
+            if ($dp) {
+                $dp->status = 'available';
+                $dp->save();
+            }
+        }
+
+        $order->order_status = 'Cancelled';
+        $order->cancellation_fee = 50.00;
+        $order->cancellation_payment_id = $request->razorpay_payment_id;
+        $order->cancellation_reason = $request->cancellation_reason ?: 'Cancelled by customer on tracking screen';
+        $order->cancelled_at = now();
+        $order->save();
+
+        Payment::create([
+            'order_id' => $order->id,
+            'user_id' => $order->user_id,
+            'razorpay_payment_id' => $request->razorpay_payment_id,
+            'razorpay_order_id' => $request->razorpay_order_id ?: 'cancel_' . uniqid(),
+            'amount' => 50.00,
+            'payment_method' => 'Razorpay',
+            'status' => 'Cancellation Fee Paid',
+        ]);
+
+        $order->load(['items', 'deliveryPerson', 'address', 'payment', 'feedback']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order cancelled successfully. Cancellation fee of ₹50 paid.',
+            'data' => $order
+        ]);
+    }
 }

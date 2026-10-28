@@ -51,8 +51,13 @@
 
                         <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
                             <div>
-                                <span class="small text-secondary d-block">Total Paid ({{ $order->payment_method }})</span>
+                                <span class="small text-secondary d-block">{{ $order->order_status === 'Cancelled' ? 'Original Order Value' : 'Total Paid' }} ({{ $order->payment_method }})</span>
                                 <span class="fw-bold fs-5 text-danger">₹{{ number_format($order->total_amount, 2) }}</span>
+                                @if($order->cancellation_fee > 0)
+                                    <div class="small text-danger fw-semibold mt-1">
+                                        <i class="fa-solid fa-receipt me-1"></i> Fee: ₹{{ number_format($order->cancellation_fee, 2) }} Paid (Online)
+                                    </div>
+                                @endif
                             </div>
                             <a href="{{ route('customer.orders.show', $order->id) }}" class="btn btn-zomato rounded-pill px-4">Track Order <i class="fa-solid fa-chevron-right ms-1"></i></a>
                         </div>

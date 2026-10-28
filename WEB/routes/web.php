@@ -48,6 +48,9 @@ Route::post('/cart/add', [CartController::class, 'add'])->name('customer.cart.ad
 Route::post('/cart/update', [CartController::class, 'update'])->name('customer.cart.update');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('customer.cart.remove');
 
+// Razorpay In-App / Web Payment Gateway
+Route::get('/payment/razorpay-gateway', [CustomerOrderController::class, 'razorpayGateway'])->name('payment.gateway');
+
 // Authenticated Customer Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('customer.checkout');
@@ -58,6 +61,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/my-orders', [CustomerOrderController::class, 'index'])->name('customer.orders');
     Route::get('/my-orders/{id}', [CustomerOrderController::class, 'show'])->name('customer.orders.show');
+    Route::post('/my-orders/{id}/cancel', [CustomerOrderController::class, 'cancelOrder'])->name('customer.orders.cancel');
     Route::post('/feedback', [CustomerOrderController::class, 'submitFeedback'])->name('customer.feedback.store');
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('customer.profile');

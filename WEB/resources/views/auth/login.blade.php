@@ -47,13 +47,13 @@
                         <p class="text-secondary mb-0">Don't have an account? <a href="{{ route('register') }}" class="text-danger fw-bold text-decoration-none">Create Account</a></p>
                     </div>
 
-                    <div class="mt-4 p-3 bg-light rounded-3 small">
+                    <!-- <div class="mt-4 p-3 bg-light rounded-3 small">
                         <span class="fw-bold text-dark"><i class="fa-solid fa-key text-warning me-1"></i> Demo Credentials:</span>
                         <ul class="mb-0 mt-1 text-secondary ps-3">
                             <li><strong>Admin:</strong> admin@sipnbite.com / admin123</li>
                             <li><strong>Customer:</strong> customer@sipnbite.com / customer123</li>
                         </ul>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

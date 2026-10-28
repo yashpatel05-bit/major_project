@@ -37,6 +37,7 @@ Route::post('/checkout', [OrderApiController::class, 'checkout']);
 Route::post('/verify-payment', [OrderApiController::class, 'verifyPayment']);
 Route::get('/orders/user/{userId}', [OrderApiController::class, 'getUserOrders']);
 Route::get('/orders/{id}', [OrderApiController::class, 'getOrderDetails']);
+Route::post('/orders/{id}/cancel', [OrderApiController::class, 'cancelOrder']);
 
 // Table Booking APIs
 Route::get('/tables', [BookingApiController::class, 'getTables']);

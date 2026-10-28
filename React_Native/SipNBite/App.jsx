@@ -1,13 +1,16 @@
 import React from 'react';
-import { ActivityIndicator, View, Text, Pressable, StyleSheet, LogBox } from 'react-native';
+import { ActivityIndicator, View, Text, Pressable, StyleSheet, LogBox, Platform } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
 LogBox.ignoreLogs(['Cannot connect to Expo CLI']);
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { CartProvider, useCart } from './src/context/CartContext';
+import { CartProvider } from './src/context/CartContext';
+import { colors } from './src/theme/colors';
 
 // Auth Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -29,80 +32,122 @@ import AddressScreen from './src/screens/AddressScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import ChatBotScreen from './src/screens/ChatBotScreen';
 
-import { Ionicons } from '@expo/vector-icons';
-
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// ─── Custom Figma Capsule Tab Bar Component ──────────────────
+// ─── 5-Item Bottom Navigation Bar (Matching Coffee House UI) ──
 function CustomTabBar({ state, descriptors, navigation }) {
-  const { getItemCount } = useCart();
-  const cartCount = getItemCount();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 16);
 
-  const tabDetails = {
-    HomeTab: { iconName: 'home', label: 'Home' },
-    MenuTab: { iconName: 'restaurant', label: 'Menu' },
-    CartTab: { iconName: 'cart', label: 'Cart' },
-    OrdersTab: { iconName: 'receipt', label: 'Orders' },
-    BookTableTab: { iconName: 'calendar', label: 'Book Table' },
-    ProfileTab: { iconName: 'person', label: 'Profile' },
+  const tabConfig = {
+    HomeTab: {
+      label: 'Home',
+      activeIcon: 'home',
+      inactiveIcon: 'home-outline',
+      isCenter: false,
+    },
+    MenuTab: {
+      label: 'Menu',
+      activeIcon: 'book',
+      inactiveIcon: 'book-outline',
+      isCenter: false,
+    },
+    OrdersTab: {
+      label: 'Orders',
+      activeIcon: 'restaurant',
+      inactiveIcon: 'restaurant-outline',
+      isCenter: true, // Elevated center circular button
+    },
+    TableBookingTab: {
+      label: 'Table Booking',
+      activeIcon: 'calendar',
+      inactiveIcon: 'calendar-outline',
+      isCenter: false,
+    },
+    ProfileTab: {
+      label: 'Profile',
+      activeIcon: 'person',
+      inactiveIcon: 'person-outline',
+      isCenter: false,
+    },
   };
 
   return (
-    <View style={tabStyles.tabBarContainer}>
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index;
-        const info = tabDetails[route.name] || { iconName: 'square', label: 'Tab' };
-        const badge = route.name === 'CartTab' ? cartCount : 0;
+    <View style={[tabStyles.wrapper, { paddingBottom: bottomInset }]}>
+      <View style={tabStyles.container}>
+        {state.routes.map((route, index) => {
+          const isFocused = state.index === index;
+          const conf = tabConfig[route.name] || {
+            label: route.name,
+            activeIcon: 'square',
+            inactiveIcon: 'square-outline',
+            isCenter: false,
+          };
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          if (conf.isCenter) {
+            // Highlighted Center Button for Orders
+            return (
+              <Pressable
+                key={route.key}
+                onPress={onPress}
+                style={tabStyles.centerTabItem}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+              >
+                <View style={[tabStyles.centerCircle, isFocused && tabStyles.centerCircleActive]}>
+                  <Ionicons name="receipt" size={22} color="#FFFFFF" />
+                </View>
+                <Text style={[tabStyles.centerLabel, isFocused && tabStyles.centerLabelActive]}>
+                  {conf.label}
+                </Text>
+              </Pressable>
+            );
           }
-        };
 
-        return (
-          <Pressable
-            key={route.key}
-            onPress={onPress}
-            style={tabStyles.tabItem}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-          >
-            {isFocused ? (
-              <View style={tabStyles.activePill}>
-                <Ionicons name={info.iconName} size={18} color="#9C91FA" />
-                <Text style={tabStyles.activeLabel}>{info.label}</Text>
-                {badge > 0 && (
-                  <View style={tabStyles.activeBadge}>
-                    <Text style={tabStyles.activeBadgeText}>{badge > 99 ? '99+' : badge}</Text>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <View style={tabStyles.inactiveIconBox}>
-                <Ionicons name={`${info.iconName}-outline`} size={22} color="#A0A0A0" />
-                {badge > 0 && (
-                  <View style={tabStyles.inactiveBadge}>
-                    <Text style={tabStyles.inactiveBadgeText}>{badge > 99 ? '99+' : badge}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </Pressable>
-        );
-      })}
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              style={tabStyles.tabItem}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+            >
+              <Ionicons
+                name={isFocused ? conf.activeIcon : conf.inactiveIcon}
+                size={22}
+                color={isFocused ? colors.primaryDark : '#8C7D73'}
+              />
+              <Text
+                style={[
+                  tabStyles.tabLabel,
+                  isFocused && tabStyles.tabLabelActive,
+                ]}
+                numberOfLines={1}
+              >
+                {conf.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
-// ─── Bottom Tabs Navigator ──────────────────────────────────
+// ─── Bottom Tabs Navigator (Exactly 5 Options) ───────────────
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -111,9 +156,8 @@ function MainTabs() {
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
       <Tab.Screen name="MenuTab" component={MenuScreen} />
-      <Tab.Screen name="CartTab" component={CartScreen} />
       <Tab.Screen name="OrdersTab" component={OrderHistoryScreen} />
-      <Tab.Screen name="BookTableTab" component={TableBookingScreen} />
+      <Tab.Screen name="TableBookingTab" component={TableBookingScreen} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -131,7 +175,7 @@ function AuthStack() {
   );
 }
 
-// ─── App Stack (Tabs + Modal Screens) ───────────────────────
+// ─── App Stack (Tabs + Subscreens) ──────────────────────────
 function AppStack() {
   return (
     <Stack.Navigator
@@ -149,7 +193,11 @@ function AppStack() {
       <Stack.Screen name="Feedback" component={FeedbackScreen} />
       <Stack.Screen name="Address" component={AddressScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
-      <Stack.Screen name="ChatBot" component={ChatBotScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen
+        name="ChatBot"
+        component={ChatBotScreen}
+        options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+      />
     </Stack.Navigator>
   );
 }
@@ -161,9 +209,9 @@ function RootNavigator() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingEmoji}>☕</Text>
-        <ActivityIndicator size="large" color="#E23744" />
-        <Text style={styles.loadingText}>Loading Sip & Bite...</Text>
+        <Ionicons name="restaurant" size={50} color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 16 }} />
+        <Text style={styles.loadingText}>Preparing Sip & Bite...</Text>
       </View>
     );
   }
@@ -178,84 +226,80 @@ function RootNavigator() {
 // ─── App Entry Point ────────────────────────────────────────
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <RootNavigator />
-      </CartProvider>
-    </AuthProvider>
+    <SafeAreaProvider style={{ flex: 1 }}>
+      <AuthProvider>
+        <CartProvider>
+          <RootNavigator />
+        </CartProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
-// ─── Figma Capsule Dock Tab Bar Styles ───────────────────────
+// ─── Tab Bar Styles ─────────────────────────────────────────
 const tabStyles = StyleSheet.create({
-  tabBarContainer: {
-    position: 'absolute',
-    bottom: 24,
-    left: 16,
-    right: 16,
+  wrapper: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 30,
-    height: 64,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 10,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
+    height: 56,
+    paddingTop: 4,
+    backgroundColor: '#FFFFFF',
   },
   tabItem: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
   },
-  activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4FB',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 4,
+  tabLabel: {
+    color: '#8C7D73',
+    fontSize: 10.5,
+    fontWeight: '600',
+    marginTop: 3,
   },
-  activeLabel: {
-    color: '#9C91FA',
-    fontSize: 12,
+  tabLabelActive: {
+    color: colors.primaryDark,
     fontWeight: '800',
   },
-  activeBadge: {
-    backgroundColor: '#FA73A0',
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    marginLeft: 2,
-  },
-  activeBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  inactiveIconBox: {
-    padding: 10,
+  centerTabItem: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
+    top: -14,
   },
-  inactiveBadge: {
-    backgroundColor: '#FA73A0',
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    position: 'absolute',
-    top: 2,
-    right: 2,
+  centerCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
   },
-  inactiveBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
+  centerCircleActive: {
+    backgroundColor: colors.primaryDark,
+    transform: [{ scale: 1.05 }],
+  },
+  centerLabel: {
+    color: '#8C7D73',
+    fontSize: 10.5,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  centerLabelActive: {
+    color: colors.primaryDark,
+    fontWeight: '800',
   },
 });
 
@@ -263,16 +307,12 @@ const tabStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: 'center',
-    backgroundColor: '#FFFBF7',
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: 'center',
   },
-  loadingEmoji: {
-    fontSize: 60,
-    marginBottom: 20,
-  },
   loadingText: {
-    color: '#8C7D73',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: '700',
     marginTop: 14,

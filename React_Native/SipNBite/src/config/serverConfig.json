@@ -1,0 +1,6 @@
+{
+  "serverIp": "192.168.31.100",
+  "backendPort": 8000,
+  "apiBaseUrl": "http://192.168.31.100:8000/api/",
+  "updatedAt": "2026-10-28T16:21:55.305Z"
+}

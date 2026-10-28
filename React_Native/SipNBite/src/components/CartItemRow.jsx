@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../theme/colors';
 
 export default function CartItemRow({
   cartItem,
@@ -22,7 +23,7 @@ export default function CartItemRow({
     <View style={styles.row}>
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>{menuItem.name}</Text>
-        <Text style={styles.price}>₹{menuItem.price} each</Text>
+        <Text style={styles.price}>₹{Math.round(menuItem.price)} each</Text>
       </View>
 
       <View style={styles.controls}>
@@ -31,7 +32,7 @@ export default function CartItemRow({
           onPress={() => handleDecrease(target)}
           accessibilityLabel="Decrease quantity"
         >
-          <Ionicons name="remove" size={14} color="#E23744" />
+          <Ionicons name="remove" size={14} color={colors.primary} />
         </Pressable>
 
         <Text style={styles.quantity}>{quantity}</Text>
@@ -41,18 +42,18 @@ export default function CartItemRow({
           onPress={() => handleIncrease(target)}
           accessibilityLabel="Increase quantity"
         >
-          <Ionicons name="add" size={14} color="#E23744" />
+          <Ionicons name="add" size={14} color={colors.primary} />
         </Pressable>
       </View>
 
-      <Text style={styles.subtotal}>₹{(menuItem.price * quantity).toFixed(0)}</Text>
+      <Text style={styles.subtotal}>₹{Math.round(menuItem.price * quantity)}</Text>
 
       <Pressable
         style={styles.deleteButton}
         onPress={() => onDelete && onDelete(target)}
         accessibilityLabel={`Remove ${menuItem.name}`}
       >
-        <Ionicons name="trash-outline" size={16} color="#E23744" />
+        <Ionicons name="trash-outline" size={16} color={colors.error} />
       </Pressable>
     </View>
   );
@@ -62,29 +63,32 @@ const styles = StyleSheet.create({
   row: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    elevation: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
     flexDirection: 'row',
     marginBottom: 10,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    shadowColor: '#3D2D25',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
   },
   info: {
     flex: 1,
   },
   name: {
-    color: '#2D2925',
+    color: colors.textDark,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   price: {
-    color: '#978D82',
-    fontSize: 11,
+    color: colors.textMuted,
+    fontSize: 11.5,
     marginTop: 2,
+    fontWeight: '600',
   },
   controls: {
     alignItems: 'center',
@@ -93,20 +97,14 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     alignItems: 'center',
-    backgroundColor: '#F1ECE6',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 8,
-    height: 28,
+    height: 30,
     justifyContent: 'center',
-    width: 28,
-  },
-  controlText: {
-    color: '#B86B3D',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: -1,
+    width: 30,
   },
   quantity: {
-    color: '#2D2925',
+    color: colors.textDark,
     fontSize: 14,
     fontWeight: '800',
     marginHorizontal: 10,
@@ -114,22 +112,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtotal: {
-    color: '#B86B3D',
+    color: colors.primaryDark,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '900',
     marginHorizontal: 8,
     minWidth: 50,
     textAlign: 'right',
   },
   deleteButton: {
     alignItems: 'center',
-    height: 28,
+    height: 30,
     justifyContent: 'center',
-    width: 28,
-  },
-  deleteText: {
-    color: '#C62828',
-    fontSize: 14,
-    fontWeight: '700',
+    width: 30,
+    marginLeft: 4,
   },
 });

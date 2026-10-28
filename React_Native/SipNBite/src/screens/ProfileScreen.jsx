@@ -8,12 +8,15 @@ import {
   Alert,
   ActivityIndicator,
   StyleSheet,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { updateProfilePhoto } from '../api/ApiClient';
 import { SERVER_IP } from '../config/AppConfig';
+import { colors } from '../theme/colors';
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
@@ -93,10 +96,10 @@ export default function ProfileScreen({ navigation }) {
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color="#1F1610" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </Pressable>
         <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 32 }} />
+        <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -108,16 +111,16 @@ export default function ProfileScreen({ navigation }) {
                 <ActivityIndicator color="#FFFFFF" size="small" />
               </View>
             ) : avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatar} />
+              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
             ) : (
-              <View style={styles.avatar}>
+              <View style={styles.avatarCircle}>
                 <Text style={styles.avatarInitial}>
                   {user ? user.name.charAt(0).toUpperCase() : '?'}
                 </Text>
               </View>
             )}
             <View style={styles.cameraBadge}>
-              <Ionicons name="camera" size={14} color="#FFFFFF" />
+              <Ionicons name="camera" size={13} color={colors.primaryDark} />
             </View>
           </Pressable>
 
@@ -125,8 +128,8 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.userEmail}>{user?.email || 'Not logged in'}</Text>
           
           <Pressable style={styles.changePhotoBtn} onPress={handlePickProfileImage}>
-            <Ionicons name="camera-outline" size={16} color="#E23744" style={{ marginRight: 6 }} />
-            <Text style={styles.changePhotoText}>Upload Photo from Phone</Text>
+            <Ionicons name="camera-outline" size={15} color={colors.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.changePhotoText}>Upload Photo</Text>
           </Pressable>
         </View>
 
@@ -140,7 +143,7 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Quick Links */}
         <View style={styles.linksSection}>
-          <Text style={styles.sectionLabel}>App Features & Menu</Text>
+          <Text style={styles.sectionLabel}>Cafe Features</Text>
           <LinkRow
             iconName="receipt-outline"
             label="My Order History & Live Track"
@@ -148,7 +151,7 @@ export default function ProfileScreen({ navigation }) {
           />
           <LinkRow
             iconName="restaurant-outline"
-            label="My Table Reservations & Admin Status"
+            label="My Table Reservations & Status"
             onPress={() => navigation.navigate('TableBookingHistory')}
           />
           <LinkRow
@@ -168,7 +171,7 @@ export default function ProfileScreen({ navigation }) {
           />
           <LinkRow
             iconName="information-circle-outline"
-            label="About Sip N Bite Café"
+            label="About Sip & Bite Cafe & Food"
             onPress={() => navigation.navigate('About')}
           />
         </View>
@@ -179,7 +182,7 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.logoutText}>Logout Account</Text>
         </Pressable>
 
-        <Text style={styles.versionText}>Sip N Bite Mobile v2.0 • Real Edition</Text>
+        <Text style={styles.versionText}>Sip & Bite Cafe & Food • Mobile App</Text>
       </ScrollView>
     </View>
   );
@@ -188,7 +191,7 @@ export default function ProfileScreen({ navigation }) {
 function InfoRow({ iconName, label, value }) {
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={iconName} size={20} color="#E23744" style={{ marginRight: 12 }} />
+      <Ionicons name={iconName} size={19} color={colors.primary} style={{ marginRight: 12 }} />
       <View style={styles.infoContent}>
         <Text style={styles.infoLabel}>{label}</Text>
         <Text style={styles.infoValue}>{value}</Text>
@@ -200,85 +203,87 @@ function InfoRow({ iconName, label, value }) {
 function LinkRow({ iconName, label, onPress }) {
   return (
     <Pressable style={styles.linkRow} onPress={onPress}>
-      <Ionicons name={iconName} size={20} color="#E23744" style={{ marginRight: 12 }} />
+      <Ionicons name={iconName} size={19} color={colors.primary} style={{ marginRight: 12 }} />
       <Text style={styles.linkLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color="#A89E91" />
+      <Ionicons name="chevron-forward" size={16} color={colors.textPlaceholder} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFBF7' },
+  container: { flex: 1, backgroundColor: colors.background },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: Platform.OS === 'android' ? ((StatusBar.currentHeight || 28) + 8) : 12,
     paddingBottom: 14,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#FFE4D6',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  backButton: { width: 32, height: 32, justifyContent: 'center' },
-  backText: { fontSize: 28, color: '#1F1610', fontWeight: '900', lineHeight: 30 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1F1610' },
+  backButton: { width: 36, height: 36, justifyContent: 'center' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.primaryDark,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
   scrollContent: { padding: 16, paddingBottom: 40 },
   profileCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 22,
-    padding: 24,
+    padding: 22,
     alignItems: 'center',
     marginBottom: 20,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
-    elevation: 3,
-    shadowColor: '#E23744',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
   },
   avatarContainer: { position: 'relative', marginBottom: 12 },
-  avatarImage: { width: 88, height: 88, borderRadius: 44, borderWidth: 3, borderColor: '#E23744' },
+  avatarImage: { width: 84, height: 84, borderRadius: 42, borderWidth: 2.5, borderColor: colors.primary },
   avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#E23744',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarLetter: { fontSize: 36, fontWeight: '900', color: '#FFFFFF' },
+  loadingAvatar: { width: 84, height: 84, borderRadius: 42, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' },
+  avatarInitial: { fontSize: 34, fontWeight: '900', color: '#FFFFFF' },
   cameraBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    width: 28,
-    height: 28,
+    borderRadius: 13,
+    width: 26,
+    height: 26,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  cameraIcon: { fontSize: 14 },
-  userName: { fontSize: 20, fontWeight: '900', color: '#1F1610' },
-  userEmail: { fontSize: 13, color: '#8C7D73', marginTop: 2, marginBottom: 12, fontWeight: '600' },
+  userName: { fontSize: 19, fontWeight: '900', color: colors.textDark },
+  userEmail: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 12, fontWeight: '500' },
   changePhotoBtn: {
-    backgroundColor: '#FFF5F0',
-    borderWidth: 1.5,
-    borderColor: '#E23744',
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  changePhotoText: { color: '#E23744', fontSize: 12, fontWeight: '900' },
+  changePhotoText: { color: colors.primaryDark, fontSize: 12, fontWeight: '800' },
 
   infoSection: { marginBottom: 20 },
   linksSection: { marginBottom: 20 },
-  sectionLabel: { fontSize: 12, fontWeight: '900', color: '#FF9100', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.8 },
+  sectionLabel: { fontSize: 11.5, fontWeight: '800', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.8 },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -286,35 +291,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  infoIcon: { fontSize: 20, marginRight: 12 },
   infoContent: { flex: 1 },
-  infoLabel: { fontSize: 11, color: '#8C7D73', fontWeight: '700' },
-  infoValue: { fontSize: 14, fontWeight: '900', color: '#1F1610', marginTop: 2 },
+  infoLabel: { fontSize: 10.5, color: colors.textMuted, fontWeight: '600' },
+  infoValue: { fontSize: 13.5, fontWeight: '800', color: colors.textDark, marginTop: 2 },
   linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 15,
     marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  linkIcon: { fontSize: 20, marginRight: 12 },
-  linkLabel: { flex: 1, fontSize: 14, fontWeight: '900', color: '#1F1610' },
-  linkArrow: { fontSize: 22, color: '#E23744', fontWeight: '900' },
+  linkLabel: { flex: 1, fontSize: 13.5, fontWeight: '700', color: colors.textDark },
 
   logoutButton: {
     backgroundColor: '#FEE2E2',
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
     marginTop: 10,
   },
-  logoutText: { color: '#DC2626', fontSize: 15, fontWeight: '900' },
-  versionText: { textAlign: 'center', color: '#8C7D73', fontSize: 12, marginTop: 20, fontWeight: '700' },
+  logoutText: { color: '#DC2626', fontSize: 14, fontWeight: '800' },
+  versionText: { textAlign: 'center', color: colors.textPlaceholder, fontSize: 11.5, marginTop: 20, fontWeight: '600' },
 });

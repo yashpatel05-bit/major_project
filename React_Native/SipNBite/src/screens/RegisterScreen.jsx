@@ -11,7 +11,9 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { colors } from '../theme/colors';
 
 export default function RegisterScreen({ navigation }) {
   const { register } = useAuth();
@@ -22,12 +24,36 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Validation errors
+  const [errors, setErrors] = useState({});
+
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    const newErrors = {};
+
+    if (!name.trim()) {
+      newErrors.name = 'Please enter this field: Full Name';
+    }
+
+    if (!email.trim()) {
+      newErrors.email = 'Please enter this field: Email Address';
+    } else if (!email.includes('@')) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!password.trim()) {
+      newErrors.password = 'Please enter this field: Password';
+    } else if (password.trim().length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      const firstError = newErrors.name || newErrors.email || newErrors.password;
+      Alert.alert('Please Fill Required Field', firstError);
       return;
     }
 
+    setErrors({});
     setLoading(true);
     try {
       const result = await register(
@@ -40,7 +66,6 @@ export default function RegisterScreen({ navigation }) {
       if (!result.success) {
         Alert.alert('Registration Failed', result.message);
       }
-      // On success, AuthContext auto-navigates via user state change
     } catch (err) {
       Alert.alert('Error', err.message || 'Unable to connect to server');
     } finally {
@@ -56,11 +81,13 @@ export default function RegisterScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {/* Top bar */}
         <View style={styles.topBar}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backText}>← Back</Text>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" style={{ marginRight: 4 }} />
+            <Text style={styles.backText}>Back</Text>
           </Pressable>
         </View>
 
@@ -68,16 +95,79 @@ export default function RegisterScreen({ navigation }) {
           <Text style={styles.brand}>
             Create <Text style={styles.brandAccent}>Account</Text>
           </Text>
-          <Text style={styles.tagline}>Join the Sip & Bite family</Text>
+          <Text style={styles.tagline}>Join the Sip & Bite food & dining family</Text>
         </View>
 
         {/* Form Card */}
         <View style={styles.formCard}>
-          <InputField label="Full Name *" placeholder="Your name" value={name} onChangeText={setName} />
-          <InputField label="Email *" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-          <InputField label="Phone" placeholder="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-          <InputField label="Address" placeholder="Your address" value={address} onChangeText={setAddress} />
-          <InputField label="Password *" placeholder="Create a password" value={password} onChangeText={setPassword} secureTextEntry />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>
+              Full Name <Text style={styles.requiredStar}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.input, errors.name && styles.inputError]}
+              value={name}
+              onChangeText={(val) => {
+                setName(val);
+                if (errors.name) setErrors((prev) => ({ ...prev, name: null }));
+              }}
+            />
+            {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>
+              Email Address <Text style={styles.requiredStar}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.input, errors.email && styles.inputError]}
+              value={email}
+              onChangeText={(val) => {
+                setEmail(val);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput
+              style={styles.input}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Delivery Address</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={address}
+              onChangeText={setAddress}
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>
+              Password <Text style={styles.requiredStar}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.input, errors.password && styles.inputError]}
+              value={password}
+              onChangeText={(val) => {
+                setPassword(val);
+                if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
+              }}
+              secureTextEntry
+            />
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+          </View>
 
           <Pressable
             style={[styles.registerButton, loading && styles.buttonDisabled]}
@@ -103,25 +193,9 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-function InputField({ label, placeholder, value, onChangeText, ...rest }) {
-  return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="#A89E91"
-        value={value}
-        onChangeText={onChangeText}
-        {...rest}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#3D2D25',
+    backgroundColor: '#1E140F',
     flex: 1,
   },
   scrollContent: {
@@ -129,73 +203,104 @@ const styles = StyleSheet.create({
   },
   topBar: {
     paddingHorizontal: 16,
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'android' ? 16 : 10,
+    paddingBottom: 10,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 6,
   },
   backText: {
-    color: '#D6C4B4',
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   heroMini: {
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    paddingTop: 16,
+    alignItems: 'center',
+    paddingBottom: 22,
+    paddingTop: 8,
   },
   brand: {
     color: '#FFF8F0',
     fontSize: 28,
     fontWeight: '900',
+    letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   brandAccent: {
-    color: '#D98A54',
+    color: colors.accent,
   },
   tagline: {
-    color: '#D6C4B4',
-    fontSize: 13,
+    color: '#D4C4B5',
+    fontSize: 12.5,
     marginTop: 4,
+    fontWeight: '500',
   },
   formCard: {
-    backgroundColor: '#FBF8F4',
+    backgroundColor: colors.background,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 28,
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   inputGroup: {
     marginBottom: 14,
   },
   inputLabel: {
-    color: '#5C534A',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 5,
+    color: colors.textDark,
+    fontSize: 12.5,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  requiredStar: {
+    color: colors.error,
+    fontWeight: '900',
   },
   input: {
-    backgroundColor: '#F1ECE6',
-    borderRadius: 12,
-    color: '#2D2925',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.textDark,
     fontSize: 14,
-    height: 46,
+    height: 48,
     paddingHorizontal: 16,
+    fontWeight: '600',
+  },
+  textArea: {
+    height: 64,
+    textAlignVertical: 'top',
+    paddingTop: 10,
+  },
+  inputError: {
+    borderColor: colors.error,
+    borderWidth: 1.5,
+    backgroundColor: '#FFF8F8',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 4,
+    marginLeft: 2,
   },
   registerButton: {
     alignItems: 'center',
-    backgroundColor: '#B86B3D',
+    backgroundColor: colors.primary,
     borderRadius: 14,
     height: 50,
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 14,
+    elevation: 2,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   registerButtonText: {
-    color: '#FFF8F0',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
   },
@@ -206,12 +311,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginHint: {
-    color: '#9B8D7B',
+    color: colors.textMuted,
     fontSize: 13,
   },
   loginLink: {
-    color: '#B86B3D',
+    color: colors.primary,
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '900',
   },
 });

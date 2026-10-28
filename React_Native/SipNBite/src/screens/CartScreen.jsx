@@ -7,10 +7,13 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
 import CartItemRow from '../components/CartItemRow';
+import { colors } from '../theme/colors';
 
 export default function CartScreen({ navigation }) {
   const {
@@ -38,7 +41,7 @@ export default function CartScreen({ navigation }) {
   const handleApplyCoupon = () => {
     const code = promoCode.trim().toUpperCase();
     if (!code) {
-      Alert.alert('Coupon Error', 'Please enter a valid promo code.');
+      Alert.alert('Please Fill Required Field', 'Please enter this field: Promo Code');
       return;
     }
 
@@ -80,17 +83,17 @@ export default function CartScreen({ navigation }) {
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color="#1F1610" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </Pressable>
         <Text style={styles.headerTitle}>Shopping Cart ({cartItems.length})</Text>
-        <View style={{ width: 32 }} />
+        <View style={{ width: 36 }} />
       </View>
 
       {cartItems.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="cart-outline" size={54} color="#E23744" style={{ marginBottom: 12 }} />
+          <Ionicons name="cart-outline" size={54} color={colors.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySubtitle}>Explore our delicious coffee, shakes & bites!</Text>
+          <Text style={styles.emptySubtitle}>Explore our delicious meals, snacks & drinks!</Text>
           <Pressable style={styles.browseButton} onPress={() => navigation.goBack()}>
             <Text style={styles.browseButtonText}>Explore Menu</Text>
           </Pressable>
@@ -117,7 +120,7 @@ export default function CartScreen({ navigation }) {
             {/* Promo / Coupon Box */}
             <View style={styles.promoCard}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="pricetag-outline" size={16} color="#E23744" style={{ marginRight: 6 }} />
+                <Ionicons name="pricetag-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
                 <Text style={styles.promoHeader}>Have a Coupon / Promo Code?</Text>
               </View>
               {appliedCoupon ? (
@@ -133,8 +136,6 @@ export default function CartScreen({ navigation }) {
                 <View style={styles.promoInputRow}>
                   <TextInput
                     style={styles.promoInput}
-                    placeholder="Enter WELCOME10 or SIP20"
-                    placeholderTextColor="#A79D93"
                     value={promoCode}
                     onChangeText={setPromoCode}
                     autoCapitalize="characters"
@@ -180,11 +181,11 @@ export default function CartScreen({ navigation }) {
           {/* Checkout Footer Button */}
           <View style={styles.footer}>
             <View style={styles.footerInfo}>
-              <Text style={styles.footerTotalLabel}>Grand Total</Text>
+              <Text style={styles.footerTotalLabel}>Total Amount</Text>
               <Text style={styles.footerTotalVal}>₹{Math.round(finalTotal)}</Text>
             </View>
             <Pressable style={styles.checkoutButton} onPress={handleProceed}>
-              <Text style={styles.checkoutText}>Proceed to Checkout -{">"}</Text>
+              <Text style={styles.checkoutText}>Proceed to Checkout →</Text>
             </Pressable>
           </View>
         </>
@@ -194,103 +195,110 @@ export default function CartScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFBF7' },
+  container: { flex: 1, backgroundColor: colors.background },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: Platform.OS === 'android' ? ((StatusBar.currentHeight || 28) + 8) : 12,
     paddingBottom: 14,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#FFE4D6',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  backButton: { width: 32, height: 32, justifyContent: 'center' },
-  backText: { fontSize: 24, color: '#1F1610', fontWeight: '900' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1F1610' },
+  backButton: { width: 36, height: 36, justifyContent: 'center' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.primaryDark,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  emptyEmoji: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '900', color: '#1F1610' },
-  emptySubtitle: { fontSize: 13, color: '#8C7D73', marginTop: 4, marginBottom: 20, textAlign: 'center', fontWeight: '600' },
-  browseButton: { backgroundColor: '#E23744', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16, elevation: 4 },
-  browseButtonText: { color: '#FFF', fontWeight: '900', fontSize: 14 },
+  emptyTitle: { fontSize: 20, fontWeight: '900', color: colors.textDark },
+  emptySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4, marginBottom: 20, textAlign: 'center', fontWeight: '500' },
+  browseButton: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16, elevation: 3 },
+  browseButtonText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 120 },
+  scrollContent: { padding: 16, paddingBottom: 110 },
 
   promoCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 16,
     marginVertical: 12,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
+    borderWidth: 1,
+    borderColor: colors.border,
     elevation: 2,
   },
-  promoHeader: { fontSize: 13, fontWeight: '900', color: '#1F1610', marginBottom: 10 },
-  promoInputRow: { flexDirection: 'row', gap: 10 },
+  promoHeader: { fontSize: 13, fontWeight: '800', color: colors.textDark },
+  promoInputRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
   promoInput: {
     flex: 1,
-    backgroundColor: '#FFF5F0',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 46,
     fontSize: 13,
-    color: '#1F1610',
-    fontWeight: '800',
+    color: colors.textDark,
+    fontWeight: '700',
     borderWidth: 1,
-    borderColor: '#FFE4D6',
+    borderColor: colors.border,
   },
   applyBtn: {
-    backgroundColor: '#E23744',
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingHorizontal: 18,
     justifyContent: 'center',
   },
-  applyBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
-  appliedRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  applyBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  appliedRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   appliedBadge: { backgroundColor: '#DCFCE7', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#86EFAC' },
-  appliedText: { color: '#15803D', fontWeight: '900', fontSize: 12 },
-  removeCoupon: { color: '#DC2626', fontSize: 12, fontWeight: '800' },
+  appliedText: { color: '#15803D', fontWeight: '800', fontSize: 12 },
+  removeCoupon: { color: colors.error, fontSize: 12, fontWeight: '700' },
 
   billCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#FFE4D6',
+    borderWidth: 1,
+    borderColor: colors.border,
     elevation: 2,
   },
-  billTitle: { fontSize: 15, fontWeight: '900', color: '#1F1610', marginBottom: 12 },
+  billTitle: { fontSize: 15, fontWeight: '900', color: colors.textDark, marginBottom: 12 },
   billRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 4 },
-  billLabel: { fontSize: 13, color: '#8C7D73', fontWeight: '600' },
-  billValue: { fontSize: 13, fontWeight: '800', color: '#1F1610' },
-  discountLabel: { fontSize: 13, fontWeight: '900', color: '#16A34A' },
-  discountValue: { fontSize: 13, fontWeight: '900', color: '#16A34A' },
-  divider: { height: 1, backgroundColor: '#FFE4D6', marginVertical: 10 },
-  totalLabel: { fontSize: 16, fontWeight: '900', color: '#1F1610' },
-  totalValue: { fontSize: 18, fontWeight: '900', color: '#E23744' },
+  billLabel: { fontSize: 13, color: colors.textMuted, fontWeight: '500' },
+  billValue: { fontSize: 13, fontWeight: '800', color: colors.textDark },
+  discountLabel: { fontSize: 13, fontWeight: '800', color: '#16A34A' },
+  discountValue: { fontSize: 13, fontWeight: '800', color: '#16A34A' },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 10 },
+  totalLabel: { fontSize: 16, fontWeight: '900', color: colors.textDark },
+  totalValue: { fontSize: 18, fontWeight: '900', color: colors.primaryDark },
 
   footer: {
     position: 'absolute',
-    bottom: 90,
+    bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: '#1F1610',
+    backgroundColor: colors.primaryDark,
     borderRadius: 20,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  footerTotalLabel: { fontSize: 11, color: '#FFEAE0', fontWeight: '700' },
+  footerTotalLabel: { fontSize: 11, color: '#D4C4B5', fontWeight: '600' },
   footerTotalVal: { fontSize: 20, fontWeight: '900', color: '#FFFFFF' },
   checkoutButton: {
-    backgroundColor: '#E23744',
+    backgroundColor: colors.accent,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  checkoutText: { color: '#FFF', fontSize: 14, fontWeight: '900' },
+  checkoutText: { color: '#FFFFFF', fontSize: 13.5, fontWeight: '800' },
 });

@@ -12,6 +12,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { colors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -19,12 +21,30 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Validation errors
+  const [errors, setErrors] = useState({});
+
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter email and password');
+    const newErrors = {};
+
+    if (!email.trim()) {
+      newErrors.email = 'Please enter this field: Email Address';
+    } else if (!email.includes('@')) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!password.trim()) {
+      newErrors.password = 'Please enter this field: Password';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      const firstError = newErrors.email || newErrors.password;
+      Alert.alert('Please Fill Required Field', firstError);
       return;
     }
 
+    setErrors({});
     setLoading(true);
     try {
       const result = await login(email.trim(), password.trim());
@@ -49,11 +69,13 @@ export default function LoginScreen({ navigation }) {
       >
         {/* Hero Area */}
         <View style={styles.heroSection}>
-          <Text style={styles.heroEmoji}>☕</Text>
+          <View style={styles.heroLogoCircle}>
+            <Ionicons name="restaurant" size={32} color={colors.accentGold} />
+          </View>
           <Text style={styles.brand}>
             Sip <Text style={styles.brandAccent}>&</Text> Bite
           </Text>
-          <Text style={styles.tagline}>A little joy in every sip</Text>
+          <Text style={styles.tagline}>Gourmet Food & Artisanal Drinks</Text>
         </View>
 
         {/* Form Card */}
@@ -62,28 +84,40 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.formSubtitle}>Sign in to continue</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
+            <Text style={styles.inputLabel}>
+              Email Address <Text style={styles.requiredStar}>*</Text>
+            </Text>
             <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              placeholderTextColor="#A89E91"
+              style={[styles.input, errors.email && styles.inputError]}
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(val) => {
+                setEmail(val);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+              }}
             />
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Password</Text>
+            <Text style={styles.inputLabel}>
+              Password <Text style={styles.requiredStar}>*</Text>
+            </Text>
             <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="#A89E91"
+              style={[styles.input, errors.password && styles.inputError]}
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(val) => {
+                setPassword(val);
+                if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
+              }}
             />
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            ) : null}
           </View>
 
           <Pressable
@@ -112,7 +146,7 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#3D2D25',
+    backgroundColor: '#1E140F',
     flex: 1,
   },
   scrollContent: {
@@ -121,29 +155,38 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    paddingBottom: 30,
-    paddingTop: 60,
+    paddingBottom: 28,
+    paddingTop: 50,
   },
-  heroEmoji: {
-    fontSize: 60,
+  heroLogoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(230,175,46,0.35)',
   },
   brand: {
     color: '#FFF8F0',
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '900',
     letterSpacing: 0.3,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   brandAccent: {
-    color: '#D98A54',
+    color: colors.accent,
   },
   tagline: {
-    color: '#D6C4B4',
+    color: '#D4C4B5',
     fontSize: 13,
     marginTop: 6,
+    fontWeight: '500',
   },
   formCard: {
-    backgroundColor: '#FBF8F4',
+    backgroundColor: colors.background,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     flex: 1,
@@ -152,46 +195,68 @@ const styles = StyleSheet.create({
     paddingTop: 32,
   },
   formTitle: {
-    color: '#2D2925',
+    color: colors.textDark,
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   formSubtitle: {
-    color: '#9B8D7B',
+    color: colors.textMuted,
     fontSize: 13,
-    marginBottom: 28,
+    marginBottom: 24,
     marginTop: 4,
+    fontWeight: '500',
   },
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: 16,
   },
   inputLabel: {
-    color: '#5C534A',
-    fontSize: 12,
-    fontWeight: '700',
+    color: colors.textDark,
+    fontSize: 12.5,
+    fontWeight: '800',
     marginBottom: 6,
   },
+  requiredStar: {
+    color: colors.error,
+    fontWeight: '900',
+  },
   input: {
-    backgroundColor: '#F1ECE6',
-    borderRadius: 12,
-    color: '#2D2925',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.textDark,
     fontSize: 14,
     height: 48,
     paddingHorizontal: 16,
+    fontWeight: '600',
+  },
+  inputError: {
+    borderColor: colors.error,
+    borderWidth: 1.5,
+    backgroundColor: '#FFF8F8',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 4,
+    marginLeft: 2,
   },
   loginButton: {
     alignItems: 'center',
-    backgroundColor: '#B86B3D',
+    backgroundColor: colors.primary,
     borderRadius: 14,
     height: 50,
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 12,
+    elevation: 2,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   loginButtonText: {
-    color: '#FFF8F0',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
   },
@@ -202,12 +267,12 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   registerHint: {
-    color: '#9B8D7B',
+    color: colors.textMuted,
     fontSize: 13,
   },
   registerLink: {
-    color: '#B86B3D',
+    color: colors.primary,
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '900',
   },
 });

@@ -13,6 +13,16 @@
       "usesCleartextTraffic": true,
       "softwareKeyboardLayoutMode": "pan"
     },
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#FAF7F2",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "visible": "always",
+      "barStyle": "dark-content",
+      "backgroundColor": "#FFFFFF"
+    },
     "ios": {
       "bundleIdentifier": "com.sipnbite.reactnative"
     },
