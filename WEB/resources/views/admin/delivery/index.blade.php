@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Delivery Partners — Sip N Bite Admin')
-@section('page_header', 'Delivery Partners Management')
+@section('title', 'Delivery Personnel — Sip N Bite Admin')
+@section('page_header', 'Delivery Personnel Management')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
